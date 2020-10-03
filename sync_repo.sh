@@ -14,7 +14,7 @@ echo "upstream is: ${UPSTREAM_URL}"
 echo "origin is: ${ORIGIN_URL}"
 
 #1. Зклонувати в нову папку форк без локального клона
-TMPDIR=${TMP:-/tmp}/$(date +%Y-%d-%m-%H%M)-${REPO}
+TMPDIR=${TMP:-/tmp}/$(date +%Y-%m-%d-%H-%M)-${REPO}
 echo $TMPDIR
 mkdir -p $TMPDIR
 cd $TMPDIR
