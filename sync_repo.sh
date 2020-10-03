@@ -54,7 +54,9 @@ do
 		git push -u origin
 		git branch --set-upstream-to=origin/${brname}
 	fi
-	echo "${brname} done\n\n"
+	echo "${brname} done"
+	echo
+	echo
 done
 
 echo "All branches are done, pushing result to origin"
@@ -67,6 +69,9 @@ if [[ "${ERROR_LIST}" != "" ]]; then
 		echo ${brname}
 	done
 fi
+
+echo
+echo
 
 #5. Видалити локальну репу
 rm -rf ${TMPDIR}
