@@ -15,7 +15,7 @@ echo "origin is: ${ORIGIN_URL}"
 
 #1. Зклонувати в нову папку форк без локального клона
 TMPDIR=${TMP:-/tmp}/$(date +%Y-%m-%d-%H-%M)-${REPO}
-echo $TMPDIR
+echo "Workdir is: ${TMPDIR}"
 mkdir -p $TMPDIR
 cd $TMPDIR
 git clone ${ORIGIN_URL} ${REPO}
