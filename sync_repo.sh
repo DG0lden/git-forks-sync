@@ -39,7 +39,7 @@ do
 		#4.4. Якщо є - змерджити з апстрімом по фф
 		echo "${brname} exists on origin, trying fast-forward merge"
 		git checkout ${brname}
-		if git merge --fast-forward upstream/${brname} ; then
+		if git merge --ff-only upstream/${brname} ; then
 			#4.6. Якщо фф пройшов запушати результат в ориджін
 			echo "${brname}: fast-forward merge successfully done"
 		else
@@ -50,18 +50,17 @@ do
 	else
 		#4.3. Якщо немає, запушати її в ориджін
 		echo "${brname} doesn't exist on origing, checking it out from upstream"
-		git status
-		set -x
 		git checkout -b ${brname} upstream/${brname}
 		git push -u origin
 		git branch --set-upstream-to=origin/${brname}
-		set +x
 	fi
 	echo "${brname} done\n\n"
 done
 
 echo "All branches are done, pushing result to origin"
-#git push --all --tags origin
+git push --all origin
+git push --tags origin
+
 #5. Видалити локальну репу
 rm -rf ${TMPDIR}
 
