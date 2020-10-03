@@ -29,7 +29,7 @@ git fetch origin
 git fetch upstream
 
 #4. Пройтись циклом по бранчам апстріма
-for brname in `git branch -r | grep upstream | grep -v master | grep -v HEAD | sed -e 's/.*\///g'`;
+for brname in $(git branch -r | grep upstream | grep -v master | grep -v HEAD | sed -e 's/.*\///g');
 do
 	#4.1. Створити локальну бранчу із апстріма
 	echo "Using ${brname}"
