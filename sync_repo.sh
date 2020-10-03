@@ -61,6 +61,13 @@ echo "All branches are done, pushing result to origin"
 git push --all origin
 git push --tags origin
 
+if [[ "${ERROR_LIST}" != "" ]]; then
+	echo "Following branches were not merged:"
+	for brname in "${ERROR_LIST}"; do
+		echo ${brname}
+	done
+fi
+
 #5. Видалити локальну репу
 rm -rf ${TMPDIR}
 
