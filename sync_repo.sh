@@ -66,7 +66,7 @@ git push --tags origin
 if [[ "${ERROR_LIST}" != "" ]]; then
 	echo "Following branches were not merged:"
 	for brname in "${ERROR_LIST}"; do
-		echo ${brname}
+		echo "  - ${brname}"
 	done
 fi
 
