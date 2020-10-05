@@ -59,6 +59,20 @@ do
 	echo
 done
 
+echo "master branch: trying fast-forward merge"
+git checkout master
+if git merge --ff-only upstream/master ; then
+	#4.6. Якщо фф пройшов запушати результат в ориджін
+	echo "master: fast-forward merge successfully done"
+else
+	#4.5. Якщо фф не пройшов - записати в список на локальний мердж
+	echo "master: fast-forward merge failed, writing down branch to error list"
+	ERROR_LIST="${ERROR_LIST} master"
+fi
+echo "master branch done"
+echo
+echo
+
 echo "All branches are done, pushing result to origin"
 git push --all origin
 git push --tags origin
