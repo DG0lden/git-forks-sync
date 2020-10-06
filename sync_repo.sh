@@ -13,6 +13,7 @@ ORIGIN_URL=${GITHUB}:${ORIGIN_ORG}/${REPO}.git
 echo "upstream is: ${UPSTREAM_URL}"
 echo "origin is: ${ORIGIN_URL}"
 
+
 #1. Зклонувати в нову папку форк без локального клона
 TMPDIR=${TMP:-/tmp}/$(date +%Y-%m-%d-%H-%M)-${REPO}
 echo "Workdir is: ${TMPDIR}"
@@ -20,6 +21,10 @@ mkdir -p ${TMPDIR}
 cd ${TMPDIR}
 git clone ${ORIGIN_URL} ${REPO}
 cd ${REPO}
+
+#10. Визначити локальний бранч
+MAIN_BRANCH=$(git branch | grep \* | sed -e 's/^\* //')
+echo "Main branch is: ${MAIN_BRANCH}"
 
 #2. Підключити оригінал как апстрім
 git remote add upstream ${UPSTREAM_URL}
@@ -29,7 +34,7 @@ git fetch origin
 git fetch upstream
 
 #4. Пройтись циклом по бранчам апстріма
-for brname in $(git branch -r | grep upstream | sed -e 's/.*\///g' | grep -v ^master$ | grep -v HEAD);
+for brname in $(git branch -r | grep upstream | cut -d/ -f2- | grep -v ^${MAIN_BRANCH}$ | grep -v HEAD | sort );
 do
 	#4.1. Створити локальну бранчу із апстріма
 	echo "Using ${brname}"
@@ -39,6 +44,7 @@ do
 		#4.4. Якщо є - змерджити з апстрімом по фф
 		echo "${brname} exists on origin, trying fast-forward merge"
 		git checkout ${brname}
+		git reset --hard origin/${brname}
 		if git merge --ff-only upstream/${brname} ; then
 			#4.6. Якщо фф пройшов запушати результат в ориджін
 			echo "${brname}: fast-forward merge successfully done"
@@ -50,7 +56,9 @@ do
 	else
 		#4.3. Якщо немає, запушати її в ориджін
 		echo "${brname} doesn't exist on origing, checking it out from upstream"
+		rm -r *
 		git checkout -b ${brname} upstream/${brname}
+		git reset --hard upstream/${brname}
 		git push -u origin
 		git branch --set-upstream-to=origin/${brname}
 	fi
@@ -59,17 +67,17 @@ do
 	echo
 done
 
-echo "master branch: trying fast-forward merge"
-git checkout master
-if git merge --ff-only upstream/master ; then
+echo "${MAIN_BRANCH} branch: trying fast-forward merge"
+git checkout ${MAIN_BRANCH}
+if git merge --ff-only upstream/${MAIN_BRANCH} ; then
 	#4.6. Якщо фф пройшов запушати результат в ориджін
-	echo "master: fast-forward merge successfully done"
+	echo "${MAIN_BRANCH}: fast-forward merge successfully done"
 else
 	#4.5. Якщо фф не пройшов - записати в список на локальний мердж
-	echo "master: fast-forward merge failed, writing down branch to error list"
-	ERROR_LIST="${ERROR_LIST} master"
+	echo "${MAIN_BRANCH}: fast-forward merge failed, writing down branch to error list"
+	ERROR_LIST="${ERROR_LIST} ${MAIN_BRANCH}"
 fi
-echo "master branch done"
+echo "${MAIN_BRANCH} branch done"
 echo
 echo
 
