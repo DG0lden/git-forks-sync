@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
+FORCE_PUSH=true
 
 GITHUB="git@github.com"
 UPSTREAM_ORG="DG0lden"
@@ -43,15 +44,27 @@ do
 	if git branch --track ${brname} origin/${brname} ; then
 		#4.4. Якщо є - змерджити з апстрімом по фф
 		echo "${brname} exists on origin, trying fast-forward merge"
+		rm -r *
 		git checkout ${brname}
 		git reset --hard origin/${brname}
 		if git merge --ff-only upstream/${brname} ; then
 			#4.6. Якщо фф пройшов запушати результат в ориджін
 			echo "${brname}: fast-forward merge successfully done"
+			git push origin ${brname}
 		else
 			#4.5. Якщо фф не пройшов - записати в список на локальний мердж
 			echo "${brname}: fast-forward merge failed, writing down branch to error list"
-			ERROR_LIST="${ERROR_LIST} ${brname}"
+			if [[ "${FORCE_PUSH}" == "true" ]]; then
+				echo "${brname}: force pushing ${brname} to origin"
+				git checkout -b temp_force_push upstream/${brname}
+				git push -f origin temp_force_push:${brname}
+				git checkout ${brname}
+				git reset --hard
+				git branch -D temp_force_push
+			else
+				ERROR_LIST="${ERROR_LIST} ${brname}"
+				git reset --hard
+			fi
 		fi
 	else
 		#4.3. Якщо немає, запушати її в ориджін
@@ -60,7 +73,6 @@ do
 		git checkout -b ${brname} upstream/${brname}
 		git reset --hard upstream/${brname}
 		git push -u origin
-		git branch --set-upstream-to=origin/${brname}
 	fi
 	echo "${brname} done"
 	echo
@@ -75,7 +87,18 @@ if git merge --ff-only upstream/${MAIN_BRANCH} ; then
 else
 	#4.5. Якщо фф не пройшов - записати в список на локальний мердж
 	echo "${MAIN_BRANCH}: fast-forward merge failed, writing down branch to error list"
-	ERROR_LIST="${ERROR_LIST} ${MAIN_BRANCH}"
+	if [[ "${FORCE_PUSH}" == "true" ]]; then
+		echo "${MAIN_BRANCH}: force pushing to origin"
+		git checkout -b temp_main upstream/${MAIN_BRANCH}
+		git push -f origin temp_main:${MAIN_BRANCH}
+		git reset --hard
+		git checkout ${MAIN_BRANCH}
+		git branch -D temp_main
+		git reset --hard
+		git pull
+	else
+		ERROR_LIST="${ERROR_LIST} ${MAIN_BRANCH}"
+	fi
 fi
 echo "${MAIN_BRANCH} branch done"
 echo
@@ -87,9 +110,10 @@ git push --tags origin
 
 if [[ "${ERROR_LIST}" != "" ]]; then
 	echo "Following branches were not merged:"
-	for brname in "${ERROR_LIST}"; do
+	for brname in ${ERROR_LIST}; do
 		echo "  - ${brname}"
 	done
+	echo "Repeat sync with --force option to force sync of these branches"
 fi
 
 echo
