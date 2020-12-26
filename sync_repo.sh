@@ -1,19 +1,84 @@
 #!/usr/bin/env bash
 
 set -e
-FORCE_PUSH=true
 
-GITHUB="git@github.com"
-UPSTREAM_ORG="DG0lden"
-ORIGIN_ORG="golubiev"
-REPO="git-forks-sync"
+#default values
+FORCE_PUSH=false
 
-UPSTREAM_URL=${GITHUB}:${UPSTREAM_ORG}/${REPO}.git
-ORIGIN_URL=${GITHUB}:${ORIGIN_ORG}/${REPO}.git
+function print_help() {
+      echo "Syncs changes from upstream to origin git repository."
+      echo "Possible parameters:"
+      echo "    -h | --help      Print this help and exit"
+      echo "    -f | --force     Force push upstream's version of branches with conflicts to origin"
+      echo "    -u | --upstream  GIT checkout URL for upstream repository"
+      echo "    -o | --origin    GIT checkout URL for origin repository"
+}
+
+while (( "$#" )); do
+  case "$1" in
+    -h|--help)
+      print_help
+      exit 0
+      ;;
+    -f|--force)
+      FORCE_PUSH=true
+      shift
+      ;;
+    -u|--upstream)
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        UPSTREAM_URL=$2
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;
+    -o|--origin)
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        ORIGIN_URL=$2
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+		echo
+		print_help
+        exit 1
+      fi
+      ;;
+    -*|--*=) # unsupported flags
+      echo "Error: Unsupported flag $1" >&2
+      echo
+      print_help
+      exit 1
+      ;;
+    *) # preserve positional arguments
+      echo "Error: Unsupported flag $1" >&2
+      echo
+      print_help
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -z "${UPSTREAM_URL}" ]]; then
+	echo "Error: Upstream URL is not set"
+	echo
+	print_help
+	exit 1
+fi
+if [[ -z "${ORIGIN_URL}" ]]; then
+	echo "Error: origin URL is not set"
+	echo
+	print_help
+	exit 1
+fi
+
+REPO=$(basename "${UPSTREAM_URL}" .git)
 
 echo "upstream is: ${UPSTREAM_URL}"
 echo "origin is: ${ORIGIN_URL}"
-
+echo "FORCE_PUSH is: ${FORCE_PUSH}"
+echo "repo name is: ${REPO}"
+#exit 1
 
 #1. Зклонувати в нову папку форк без локального клона
 TMPDIR=${TMP:-/tmp}/$(date +%Y-%m-%d-%H-%M)-${REPO}
